@@ -1,0 +1,114 @@
+package net.pistonmaster.pearlang;
+
+import net.pistonmaster.pearlang.executor.PearExecutor;
+import net.pistonmaster.pearlang.parser.PearParser;
+import net.pistonmaster.pearlang.parser.model.PearProgram;
+import net.pistonmaster.pearlang.reader.PearReader;
+import net.pistonmaster.pearlang.reader.PearTokenAndData;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.slf4j.simple.SimpleLogger;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class ExecutorTest {
+    @BeforeAll
+    public static void init() {
+        System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "TRACE");
+    }
+
+    @Test
+    public void test() {
+        PearReader pearReader = new PearReader("""
+                fn returnedNull(parameter: String, test2: int): String {
+                  return null;
+                }
+                var test = "test";
+                if (test == "test") {
+                  test = "test2";
+                } else if (test2) {
+                  test = "test3";
+                } else {
+                  test = "test4";
+                  return;
+                }
+                
+                do {
+                  test = "test5";
+                } while (test == "test4");
+                
+                while (test == "test5") {
+                  test = "test6";
+                }
+                
+                for (var i = 0; i < 3; i++) {
+                  test = "test7";
+                  println(test);
+                }
+                
+                return test;
+                """);
+        List<PearTokenAndData> tokens = pearReader.readTokens();
+        // System.out.println(TestGson.GSON.toJson(tokens));
+        PearParser pearLang = new PearParser(tokens);
+        PearProgram program = pearLang.readProgram();
+        PearExecutor executor = new PearExecutor(program);
+
+        Optional<Object> result = executor.execute();
+        assertTrue(result.isPresent());
+        assertEquals("test7", result.get());
+        System.out.println(result.get());
+    }
+
+    @Test
+    public void calculatePi() {
+        PearReader pearReader = new PearReader("""
+                fn calculatePi(n: number): number {
+                    var result = 0;
+                    for (var i = 1; i < n; i++) {
+                        if (i % 2 == 0) {
+                          result += -1.0 / (2 * i - 1);
+                        } else {
+                          result += 1.0 / (2 * i - 1);
+                        }
+                    }
+                    return result * 4;
+                }
+                
+                return calculatePi(1000);
+                """);
+        List<PearTokenAndData> tokens = pearReader.readTokens();
+        // System.out.println(TestGson.GSON.toJson(tokens));
+        PearParser pearLang = new PearParser(tokens);
+        PearProgram program = pearLang.readProgram();
+        PearExecutor executor = new PearExecutor(program);
+
+        Optional<Object> result = executor.execute();
+        assertTrue(result.isPresent());
+        System.out.println(result.get());
+    }
+
+    @Test
+    public void calculateNumber() {
+        PearReader pearReader = new PearReader("""
+                fn calculateNumber(): number {
+                    return 0.1 + 0.2;
+                }
+                
+                return calculateNumber();
+                """);
+        List<PearTokenAndData> tokens = pearReader.readTokens();
+        // System.out.println(TestGson.GSON.toJson(tokens));
+        PearParser pearLang = new PearParser(tokens);
+        PearProgram program = pearLang.readProgram();
+        PearExecutor executor = new PearExecutor(program);
+
+        Optional<Object> result = executor.execute();
+        assertTrue(result.isPresent());
+        System.out.println(result.get());
+    }
+}

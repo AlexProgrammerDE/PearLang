@@ -1,0 +1,11 @@
+
+
+fn test(a: str): str {
+  a
+  println(a);
+  if (true) {
+    var b = 1;
+  }
+  println(b);
+  return "It works!";
+}
