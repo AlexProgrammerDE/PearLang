@@ -76,9 +76,7 @@ public enum PearToken {
             }
         }
 
-        syntax.sort(Comparator.comparing(PearToken::getContent));
-
-        Collections.reverse(syntax);
+        syntax.sort(Comparator.comparing(PearToken::getContent).reversed());
 
         return Collections.unmodifiableList(syntax);
     }
