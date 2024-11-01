@@ -17,10 +17,6 @@ public final class PearVariableState<T> {
 
     @SuppressWarnings("unchecked")
     public <P> void value(PearValue<P> value) {
-        if (value.clazz() != null && value.clazz() != this.value.clazz()) {
-            throw new IllegalArgumentException("Cannot assign value of type " + value.clazz() + " to variable of type " + this.value.clazz());
-        }
-
         this.value = (PearValue<T>) value;
     }
 }

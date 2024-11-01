@@ -117,4 +117,26 @@ public class ExecutorTest {
         assertTrue(result.isPresent());
         System.out.println(result.get());
     }
+
+    @Test
+    public void setVariable() {
+        PearReader pearReader = new PearReader("""
+                fn lambdaTest(a, b) {
+                  return a + b;
+                }
+               
+                lambdaTest = lambdaTest(1, 2);
+               
+                return lambdaTest;
+                """);
+        List<PearTokenAndData> tokens = pearReader.readTokens();
+        // System.out.println(TestGson.GSON.toJson(tokens));
+        PearParser pearLang = new PearParser(tokens);
+        PearProgram program = pearLang.readProgram();
+        PearExecutor executor = new PearExecutor(program);
+
+        Optional<Object> result = executor.execute();
+        assertTrue(result.isPresent());
+        System.out.println(result.get());
+    }
 }
