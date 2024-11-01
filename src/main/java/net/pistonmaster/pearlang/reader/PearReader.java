@@ -167,6 +167,6 @@ public class PearReader {
 
     private int getColumnNumber() {
         String[] lines = pearSource.substring(0, cursor).split("\n");
-        return lines[lines.length - 1].length();
+        return lines[lines.length - 1].length() + 1;
     }
 }
