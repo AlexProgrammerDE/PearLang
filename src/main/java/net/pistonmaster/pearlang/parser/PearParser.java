@@ -93,7 +93,6 @@ public class PearParser {
 
     private PearCodeExpression readFor() {
         readToken(PearToken.FOR);
-        readToken(PearToken.OPEN_ROUND_BRACKET);
         PearCodeExpression init = null;
         PearTokenAndData data = peek();
         if (data.token() != PearToken.SEMICOLON) {
@@ -113,7 +112,7 @@ public class PearParser {
         readToken(PearToken.SEMICOLON);
         PearCodeExpression increment = null;
         PearTokenAndData incrementData = peek();
-        if (incrementData.token() != PearToken.CLOSE_ROUND_BRACKET) {
+        if (incrementData.token() != PearToken.OPEN_CURLY_BRACKET) {
             PearExpression incrementExpression = readIdExpression();
 
             if (incrementExpression instanceof PearCodeExpression codeExpression) {
@@ -122,7 +121,6 @@ public class PearParser {
                 throw new RuntimeException("Unexpected expression " + incrementExpression);
             }
         }
-        readToken(PearToken.CLOSE_ROUND_BRACKET);
         readToken(PearToken.OPEN_CURLY_BRACKET);
         List<PearCodeExpression> forBody = readFunctionBody(false);
         readToken(PearToken.CLOSE_CURLY_BRACKET);
@@ -135,18 +133,14 @@ public class PearParser {
         List<PearCodeExpression> doBody = readFunctionBody(false);
         readToken(PearToken.CLOSE_CURLY_BRACKET);
         readToken(PearToken.WHILE);
-        readToken(PearToken.OPEN_ROUND_BRACKET);
         PearValueExpression condition = readBinaryValueExpression();
-        readToken(PearToken.CLOSE_ROUND_BRACKET);
         readToken(PearToken.SEMICOLON);
         return new PearDoWhileDeclare(condition, doBody);
     }
 
     private PearCodeExpression readWhile() {
         readToken(PearToken.WHILE);
-        readToken(PearToken.OPEN_ROUND_BRACKET);
         PearValueExpression condition = readBinaryValueExpression();
-        readToken(PearToken.CLOSE_ROUND_BRACKET);
         readToken(PearToken.OPEN_CURLY_BRACKET);
         List<PearCodeExpression> whileBody = readFunctionBody(false);
         readToken(PearToken.CLOSE_CURLY_BRACKET);
@@ -155,9 +149,7 @@ public class PearParser {
 
     private PearCodeExpression readIf() {
         readToken(PearToken.IF);
-        readToken(PearToken.OPEN_ROUND_BRACKET);
         PearValueExpression condition = readBinaryValueExpression();
-        readToken(PearToken.CLOSE_ROUND_BRACKET);
         readToken(PearToken.OPEN_CURLY_BRACKET);
         List<PearCodeExpression> ifBody = readFunctionBody(false);
         readToken(PearToken.CLOSE_CURLY_BRACKET);

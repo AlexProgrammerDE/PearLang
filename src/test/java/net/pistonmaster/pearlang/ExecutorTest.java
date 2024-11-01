@@ -28,9 +28,9 @@ public class ExecutorTest {
                   return null;
                 }
                 test := "test";
-                if (test == "test") {
+                if test == "test" {
                   test = "test2";
-                } else if (test2) {
+                } else if test2 {
                   test = "test3";
                 } else {
                   test = "test4";
@@ -39,13 +39,13 @@ public class ExecutorTest {
                 
                 do {
                   test = "test5";
-                } while (test == "test4");
+                } while test == "test4";
                 
-                while (test == "test5") {
+                while test == "test5" {
                   test = "test6";
                 }
                 
-                for (i := 0; i < 3; i++) {
+                for i := 0; i < 3; i++ {
                   test = "test7";
                   println(test);
                 }
@@ -69,8 +69,8 @@ public class ExecutorTest {
         PearReader pearReader = new PearReader("""
                 fn calculatePi(n) {
                   result := 0;
-                  for (i := 1; i < n; i++) {
-                    if (i % 2 == 0) {
+                  for i := 1; i < n; i++ {
+                    if i % 2 == 0 {
                       result += -1.0 / (2 * i - 1);
                     } else {
                       result += 1.0 / (2 * i - 1);

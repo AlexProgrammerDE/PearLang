@@ -16,9 +16,9 @@ public class ParserTest {
                   return null;
                 }
                 test := "test";
-                if (test == "test") {
+                if test == "test" {
                   test = "test2";
-                } else if (test2) {
+                } else if test2 {
                   test = "test3";
                 } else {
                   test = "test4";
@@ -27,13 +27,13 @@ public class ParserTest {
                 
                 do {
                   test = "test5";
-                } while (test == "test5");
+                } while test == "test5";
                 
-                while (test == "test5") {
+                while test == "test5" {
                   test = "test6";
                 }
                 
-                for (i := 0; i < 10; i++) {
+                for i := 0; i < 10; i++ {
                   test = "test7";
                 }
                 
