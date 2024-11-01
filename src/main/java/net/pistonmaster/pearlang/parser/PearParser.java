@@ -67,7 +67,7 @@ public class PearParser {
         PearTokenAndData data = peek();
         log.debug("{}", data);
         if (data.token() == PearToken.FN) {
-            return readFunction();
+            return readFunctionWithName();
         } else if (data.token() == PearToken.RETURN) {
             return readReturn();
         } else if (data.token() == PearToken.IF) {
@@ -180,9 +180,13 @@ public class PearParser {
         return new PearReturn(value);
     }
 
-    private PearVariableDeclare readFunction() {
+    private PearVariableDeclare readFunctionWithName() {
         readToken(PearToken.FN);
         PearTokenAndData name = readToken(PearToken.ID);
+        return new PearVariableDeclare(name.data(), readFunctionParamsAndBody());
+    }
+
+    private PearFunctionDeclare readFunctionParamsAndBody() {
         readToken(PearToken.OPEN_ROUND_BRACKET);
         List<PearFunctionParameter> parameters = new ArrayList<>();
         PearTokenAndData nextParam = peek();
@@ -199,7 +203,7 @@ public class PearParser {
         List<PearCodeExpression> body = readFunctionBody(false);
         readToken(PearToken.CLOSE_CURLY_BRACKET);
 
-        return new PearVariableDeclare(name.data(), new PearFunctionDeclare(Collections.unmodifiableList(parameters), body));
+        return new PearFunctionDeclare(Collections.unmodifiableList(parameters), body);
     }
 
     private PearExpression readIdExpression() {
@@ -343,6 +347,10 @@ public class PearParser {
             case PLUS -> {
                 read();
                 return new PearUnaryExpression(readUnaryValueExpression(), PearUnaryOperator.PLUS);
+            }
+            case FN -> {
+                read();
+                return readFunctionParamsAndBody();
             }
         }
 

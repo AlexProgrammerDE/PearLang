@@ -50,6 +50,12 @@ public class ExecutorTest {
                   println(test);
                 }
                 
+                lambdaTest := fn (a, b) {
+                  return a + b;
+                };
+                
+                println(lambdaTest(1, 2));
+                
                 return test;
                 """);
         List<PearTokenAndData> tokens = pearReader.readTokens();

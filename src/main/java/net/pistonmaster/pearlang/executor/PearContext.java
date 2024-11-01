@@ -12,7 +12,7 @@ public record PearContext(PearExecutor executor, List<PearVariableState<?>> vari
         return new PearContext(executor, new ArrayList<>(List.of(new PearVariableState<>("println", new PearValue<>(PearFunctionDeclare.class, new PearFunctionDeclare(
                 List.of(new PearFunctionParameter("text")),
                 List.of((PearNativeCodeExpression) context -> {
-                    System.out.println(context.lastVariableByName("text").value().asString());
+                    System.out.println(context.lastVariableByName("text").value().value());
                     return null;
                 }))
         )))));

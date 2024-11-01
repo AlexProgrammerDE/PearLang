@@ -37,6 +37,12 @@ public class ParserTest {
                   test = "test7";
                 }
                 
+                lambdaTest := fn (a, b) {
+                  return a + b;
+                };
+                
+                println(lambdaTest(1, 2));
+                
                 return test;
                 """);
         PearParser pearLang = new PearParser(pearReader.readTokens());
