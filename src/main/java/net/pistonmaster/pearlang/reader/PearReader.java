@@ -1,15 +1,15 @@
 package net.pistonmaster.pearlang.reader;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.math.NumberUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+@Slf4j
 @RequiredArgsConstructor
 public class PearReader {
     public static final char EOF = '\0';
@@ -19,7 +19,6 @@ public class PearReader {
     public static final Pattern IDENTIFIER_PATTERN = Pattern.compile("[a-zA-Z0-9_]");
     public static final Set<Character> NUMBER_END_PATTERNS = Set.of('F', 'f', 'D', 'd', 'L', 'l');
     private final String pearSource;
-    private final Logger logger = LoggerFactory.getLogger(PearReader.class);
     private int cursor = 0;
 
     public boolean hasNext() {
@@ -90,8 +89,8 @@ public class PearReader {
                 continue;
             }
 
-            logger.debug("Found token: {} {}", token, sb);
-            return new PearTokenAndData(token, sb.toString());
+            log.debug("Found token: {} {}", token, sb);
+            return new PearTokenAndData(token, sb.toString(), getLineNumber(), getColumnNumber());
         }
 
         throw new RuntimeException("Unexpected character: " + c);
@@ -111,11 +110,11 @@ public class PearReader {
         for (PearToken token : PearToken.values()) {
             if (token.getType() == PearTokenType.KEYWORD
                     && token.getContent() != null && token.getContent().contentEquals(sb)) {
-                return new PearTokenAndData(token, token.getContent());
+                return new PearTokenAndData(token, token.getContent(), getLineNumber(), getColumnNumber());
             }
         }
 
-        return new PearTokenAndData(PearToken.ID, sb.toString());
+        return new PearTokenAndData(PearToken.ID, sb.toString(), getLineNumber(), getColumnNumber());
     }
 
     private PearTokenAndData readString() {
@@ -128,7 +127,7 @@ public class PearReader {
             }
             sb.append(c);
         }
-        return new PearTokenAndData(PearToken.STRING, sb.toString());
+        return new PearTokenAndData(PearToken.STRING, sb.toString(), getLineNumber(), getColumnNumber());
     }
 
     private PearTokenAndData readNumber() {
@@ -143,7 +142,7 @@ public class PearReader {
 
         NumberUtils.createNumber(sb.toString());
 
-        return new PearTokenAndData(PearToken.NUMBER, sb.toString());
+        return new PearTokenAndData(PearToken.NUMBER, sb.toString(), getLineNumber(), getColumnNumber());
     }
 
     public List<PearTokenAndData> readTokens() {
@@ -155,11 +154,19 @@ public class PearReader {
                 break;
             }
 
-            logger.debug("Read token: " + token);
+            log.debug("Read token: {}", token);
             tokens.add(token);
         }
 
         return tokens;
     }
 
+    private int getLineNumber() {
+        return pearSource.substring(0, cursor).split("\n").length;
+    }
+
+    private int getColumnNumber() {
+        String[] lines = pearSource.substring(0, cursor).split("\n");
+        return lines[lines.length - 1].length();
+    }
 }

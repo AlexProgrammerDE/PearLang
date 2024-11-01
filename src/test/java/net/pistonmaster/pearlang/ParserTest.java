@@ -12,10 +12,10 @@ public class ParserTest {
     @Test
     public void test() {
         PearReader pearReader = new PearReader("""
-                fn returnedNull(parameter: String, test2: int): String {
+                fn returnedNull(parameter, test2) {
                   return null;
                 }
-                var test = "test";
+                test := "test";
                 if (test == "test") {
                   test = "test2";
                 } else if (test2) {
@@ -33,7 +33,7 @@ public class ParserTest {
                   test = "test6";
                 }
                 
-                for (var i = 0; i < 10; i++) {
+                for (i := 0; i < 10; i++) {
                   test = "test7";
                 }
                 

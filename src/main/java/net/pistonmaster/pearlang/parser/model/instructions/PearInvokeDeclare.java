@@ -17,31 +17,25 @@ public record PearInvokeDeclare(String functionName,
     }
 
     public Optional<PearValue<?>> invoke(PearContext context) {
-        if (functionName.equals("println")) {
-            executePrintln(context);
-            return Optional.empty();
+        PearVariableState<?> functionVariable = context.lastVariableByName(functionName);
+        PearValue<?> functionValue = functionVariable.value();
+        if (!functionValue.isFunction()) {
+            throw new RuntimeException("Variable " + functionName + " is not a function");
         }
 
-        PearFunctionDeclare function = context.functionByName(functionName);
+        PearFunctionDeclare function = functionValue.asFunction();
         if (function.parameters().size() != parameters.size()) {
             throw new RuntimeException("Function " + functionName + " expects " + function.parameters().size() + " parameters, but got " + parameters.size());
         }
 
         PearContext newContext = context.copy();
-        int i = 0;
-        for (PearValueExpression parameter : this.parameters) {
+        for (int i = 0, size = this.parameters.size(); i < size; i++) {
+            PearValueExpression parameter = this.parameters.get(i);
             String name = function.parameters().get(i).name();
-            newContext.variables().removeIf(variable -> variable.name().equals(name));
-            newContext.functions().removeIf(function1 -> function1.name().equals(name));
 
             newContext.addVariable(new PearVariableState<>(name, parameter.evaluate(context)));
-            i++;
         }
 
         return context.executor().executeInstructions(function.body(), newContext);
-    }
-
-    private void executePrintln(PearContext context) {
-        System.out.println(parameters.get(0).evaluate(context).value());
     }
 }

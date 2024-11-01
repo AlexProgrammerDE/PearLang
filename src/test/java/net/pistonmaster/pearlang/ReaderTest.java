@@ -13,7 +13,7 @@ public class ReaderTest {
     @Test
     public void test() {
         PearReader pearReader = new PearReader("""
-                fn test(parameter: String, test2: int): String {
+                fn test(parameter, test2) {
                   return null;
                 }
                 """);

@@ -1,6 +1,7 @@
 package net.pistonmaster.pearlang.parser;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.pistonmaster.pearlang.parser.model.*;
 import net.pistonmaster.pearlang.parser.model.instructions.PearCodeExpression;
 import net.pistonmaster.pearlang.parser.model.instructions.PearInvokeDeclare;
@@ -14,17 +15,15 @@ import net.pistonmaster.pearlang.parser.model.value.*;
 import net.pistonmaster.pearlang.reader.PearToken;
 import net.pistonmaster.pearlang.reader.PearTokenAndData;
 import org.apache.commons.lang.math.NumberUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 public class PearParser {
     private final List<PearTokenAndData> tokens;
-    private final Logger logger = LoggerFactory.getLogger(PearParser.class);
     private int cursor = 0;
 
     public PearTokenAndData read() {
@@ -66,11 +65,9 @@ public class PearParser {
 
     private PearCodeExpression readFunctionBodyInstruction() {
         PearTokenAndData data = peek();
-        logger.debug(data.toString());
+        log.debug("{}", data);
         if (data.token() == PearToken.FN) {
             return readFunction();
-        } else if (data.token() == PearToken.VAR) {
-            return readVarDeclaration();
         } else if (data.token() == PearToken.RETURN) {
             return readReturn();
         } else if (data.token() == PearToken.IF) {
@@ -100,10 +97,14 @@ public class PearParser {
         PearCodeExpression init = null;
         PearTokenAndData data = peek();
         if (data.token() != PearToken.SEMICOLON) {
-            init = readVarDeclaration();
-        } else {
-            readToken(PearToken.SEMICOLON);
+            PearExpression initExpression = readIdExpression();
+            if (initExpression instanceof PearCodeExpression codeExpression) {
+                init = codeExpression;
+            } else {
+                throw new RuntimeException("Unexpected expression " + initExpression);
+            }
         }
+        readToken(PearToken.SEMICOLON);
         PearValueExpression condition = null;
         PearTokenAndData conditionData = peek();
         if (conditionData.token() != PearToken.SEMICOLON) {
@@ -115,8 +116,8 @@ public class PearParser {
         if (incrementData.token() != PearToken.CLOSE_ROUND_BRACKET) {
             PearExpression incrementExpression = readIdExpression();
 
-            if (incrementExpression instanceof PearCodeExpression) {
-                increment = (PearCodeExpression) incrementExpression;
+            if (incrementExpression instanceof PearCodeExpression codeExpression) {
+                increment = codeExpression;
             } else {
                 throw new RuntimeException("Unexpected expression " + incrementExpression);
             }
@@ -187,7 +188,7 @@ public class PearParser {
         return new PearReturn(value);
     }
 
-    private PearFunctionDeclare readFunction() {
+    private PearVariableDeclare readFunction() {
         readToken(PearToken.FN);
         PearTokenAndData name = readToken(PearToken.ID);
         readToken(PearToken.OPEN_ROUND_BRACKET);
@@ -195,47 +196,18 @@ public class PearParser {
         PearTokenAndData nextParam = peek();
         while (nextParam.token() != PearToken.CLOSE_ROUND_BRACKET) {
             PearTokenAndData parameterName = readToken(PearToken.ID);
-            readToken(PearToken.COLON);
-            PearTokenAndData parameterType = readToken(PearToken.ID);
-            parameters.add(new PearFunctionParameter(parameterName.data(), new PearType(parameterType.data())));
+            parameters.add(new PearFunctionParameter(parameterName.data()));
             nextParam = peek();
             if (nextParam.token() == PearToken.COMMA) {
                 readToken(PearToken.COMMA);
             }
         }
         readToken(PearToken.CLOSE_ROUND_BRACKET);
-        PearTokenAndData nextReturnType = peek();
-        PearType returnType = null;
-        if (nextReturnType.token() == PearToken.COLON) {
-            readToken(PearToken.COLON);
-            PearTokenAndData returnTypeToken = readToken(PearToken.ID);
-            returnType = new PearType(returnTypeToken.data());
-        }
         readToken(PearToken.OPEN_CURLY_BRACKET);
         List<PearCodeExpression> body = readFunctionBody(false);
         readToken(PearToken.CLOSE_CURLY_BRACKET);
 
-        return new PearFunctionDeclare(name.data(), returnType, Collections.unmodifiableList(parameters), body);
-    }
-
-    private PearVariableDeclare readVarDeclaration() {
-        readToken(PearToken.VAR);
-        PearTokenAndData name = readToken(PearToken.ID);
-        PearType type = null;
-        if (peek().token() == PearToken.COLON) {
-            readToken(PearToken.COLON);
-            type = new PearType(readToken(PearToken.ID).data());
-        }
-
-        PearValueExpression value = null;
-        PearTokenAndData next = peek();
-        if (next.token() == PearToken.ASSIGN) {
-            readToken(PearToken.ASSIGN);
-            value = readBinaryValueExpression();
-        }
-
-        readToken(PearToken.SEMICOLON);
-        return new PearVariableDeclare(name.data(), type, value);
+        return new PearVariableDeclare(name.data(), new PearFunctionDeclare(Collections.unmodifiableList(parameters), body));
     }
 
     private PearExpression readIdExpression() {
@@ -243,7 +215,7 @@ public class PearParser {
         PearTokenAndData next = peek();
         switch (next.token()) {
             case ASSIGN, ASSIGN_PLUS, ASSIGN_MINUS, ASSIGN_DIVIDE, ASSIGN_MULTIPLY -> {
-                read();
+                readToken(next.token());
                 PearValueExpression value = readBinaryValueExpression();
 
                 if (next.token() == PearToken.ASSIGN) {
@@ -258,34 +230,38 @@ public class PearParser {
                     }, value));
                 }
             }
-        }
-
-        if (next.token() == PearToken.OPEN_ROUND_BRACKET) {
-            readToken(PearToken.OPEN_ROUND_BRACKET);
-            List<PearValueExpression> parameters = new ArrayList<>();
-            PearTokenAndData nextParam = peek();
-            while (nextParam.token() != PearToken.CLOSE_ROUND_BRACKET) {
-                parameters.add(readBinaryValueExpression());
-                nextParam = peek();
-                if (nextParam.token() == PearToken.COMMA) {
-                    readToken(PearToken.COMMA);
+            case OPEN_ROUND_BRACKET -> {
+                readToken(PearToken.OPEN_ROUND_BRACKET);
+                List<PearValueExpression> parameters = new ArrayList<>();
+                PearTokenAndData nextParam = peek();
+                while (nextParam.token() != PearToken.CLOSE_ROUND_BRACKET) {
+                    parameters.add(readBinaryValueExpression());
+                    nextParam = peek();
+                    if (nextParam.token() == PearToken.COMMA) {
+                        readToken(PearToken.COMMA);
+                    }
                 }
+                readToken(PearToken.CLOSE_ROUND_BRACKET);
+                return new PearInvokeDeclare(name.data(), Collections.unmodifiableList(parameters));
             }
-            readToken(PearToken.CLOSE_ROUND_BRACKET);
-            return new PearInvokeDeclare(name.data(), Collections.unmodifiableList(parameters));
-        }
-
-        // TODO: Assign in theory not needed
-        if (next.token() == PearToken.INCREMENT) {
-            read();
-            return new PearVariableAssign(name.data(),
-                    new PearUnaryExpression(new PearVariableReference(name.data()), PearUnaryOperator.INCREMENT_PRE));
-        } else if (next.token() == PearToken.DECREMENT) {
-            read();
-            return new PearVariableAssign(name.data(),
-                    new PearUnaryExpression(new PearVariableReference(name.data()), PearUnaryOperator.DECREMENT_PRE));
-        } else {
-            return new PearVariableReference(name.data());
+            case VAR_DECLARE -> {
+                readToken(PearToken.VAR_DECLARE);
+                PearValueExpression value = readBinaryValueExpression();
+                return new PearVariableDeclare(name.data(), value);
+            }
+            case INCREMENT -> {
+                readToken(PearToken.INCREMENT);
+                return new PearVariableAssign(name.data(),
+                        new PearUnaryExpression(new PearVariableReference(name.data()), PearUnaryOperator.INCREMENT_PRE));
+            }
+            case DECREMENT -> {
+                readToken(PearToken.DECREMENT);
+                return new PearVariableAssign(name.data(),
+                        new PearUnaryExpression(new PearVariableReference(name.data()), PearUnaryOperator.DECREMENT_PRE));
+            }
+            default -> {
+                return new PearVariableReference(name.data());
+            }
         }
     }
 
@@ -309,7 +285,7 @@ public class PearParser {
 
     private PearValueExpression readUnaryValueExpression() {
         PearTokenAndData data = peek();
-        logger.debug("Reading returnValue expression " + data);
+        log.debug("Reading returnValue expression {}", data);
         switch (data.token()) {
             case STRING -> {
                 read();

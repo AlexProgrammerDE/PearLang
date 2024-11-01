@@ -24,10 +24,10 @@ public class ExecutorTest {
     @Test
     public void test() {
         PearReader pearReader = new PearReader("""
-                fn returnedNull(parameter: String, test2: int): String {
+                fn returnedNull(parameter, test2) {
                   return null;
                 }
-                var test = "test";
+                test := "test";
                 if (test == "test") {
                   test = "test2";
                 } else if (test2) {
@@ -45,7 +45,7 @@ public class ExecutorTest {
                   test = "test6";
                 }
                 
-                for (var i = 0; i < 3; i++) {
+                for (i := 0; i < 3; i++) {
                   test = "test7";
                   println(test);
                 }
@@ -67,16 +67,16 @@ public class ExecutorTest {
     @Test
     public void calculatePi() {
         PearReader pearReader = new PearReader("""
-                fn calculatePi(n: number): number {
-                    var result = 0;
-                    for (var i = 1; i < n; i++) {
-                        if (i % 2 == 0) {
-                          result += -1.0 / (2 * i - 1);
-                        } else {
-                          result += 1.0 / (2 * i - 1);
-                        }
+                fn calculatePi(n) {
+                  result := 0;
+                  for (i := 1; i < n; i++) {
+                    if (i % 2 == 0) {
+                      result += -1.0 / (2 * i - 1);
+                    } else {
+                      result += 1.0 / (2 * i - 1);
                     }
-                    return result * 4;
+                  }
+                  return result * 4;
                 }
                 
                 return calculatePi(1000);
@@ -95,8 +95,8 @@ public class ExecutorTest {
     @Test
     public void calculateNumber() {
         PearReader pearReader = new PearReader("""
-                fn calculateNumber(): number {
-                    return 0.1 + 0.2;
+                fn calculateNumber() {
+                  return 0.1 + 0.2;
                 }
                 
                 return calculateNumber();

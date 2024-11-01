@@ -17,7 +17,6 @@ public enum PearToken {
     ID,
 
     FN(PearTokenType.KEYWORD, "fn"),
-    VAR(PearTokenType.KEYWORD, "var"),
     IF(PearTokenType.KEYWORD, "if"),
     ELSE(PearTokenType.KEYWORD, "else"),
     WHILE(PearTokenType.KEYWORD, "while"),
@@ -57,7 +56,8 @@ public enum PearToken {
     DECREMENT(PearTokenType.SYNTAX, "--"),
     AND(PearTokenType.SYNTAX, "&&"),
     OR(PearTokenType.SYNTAX, "||"),
-    NOT(PearTokenType.SYNTAX, "!");
+    NOT(PearTokenType.SYNTAX, "!"),
+    VAR_DECLARE(PearTokenType.SYNTAX, ":=");
 
     private final PearTokenType type;
     private final String content;

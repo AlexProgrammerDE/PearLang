@@ -1,45 +1,33 @@
 package net.pistonmaster.pearlang.executor;
 
+import net.pistonmaster.pearlang.parser.model.instructions.PearNativeCodeExpression;
 import net.pistonmaster.pearlang.parser.model.instructions.fn.PearFunctionDeclare;
+import net.pistonmaster.pearlang.parser.model.instructions.fn.PearFunctionParameter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public record PearContext(PearExecutor executor, List<PearFunctionDeclare> functions,
-                          List<PearVariableState<?>> variables) {
-    public PearFunctionDeclare functionByName(String name) {
-        return functions.stream().filter(function -> function.name().equals(name)).findFirst()
-                .orElseThrow(() -> new RuntimeException("Function " + name + " not found"));
+public record PearContext(PearExecutor executor, List<PearVariableState<?>> variables) {
+    public static PearContext createDefault(PearExecutor executor) {
+        return new PearContext(executor, new ArrayList<>(List.of(new PearVariableState<>("println", new PearValue<>(PearFunctionDeclare.class, new PearFunctionDeclare(
+                List.of(new PearFunctionParameter("text")),
+                List.of((PearNativeCodeExpression) context -> {
+                    System.out.println(context.lastVariableByName("text").value().asString());
+                    return null;
+                }))
+        )))));
     }
 
-    public PearVariableState<?> variableByName(String name) {
-        return variables.stream().filter(variable -> variable.name().equals(name)).findFirst()
+    public PearVariableState<?> lastVariableByName(String name) {
+        return variables.stream().filter(variable -> variable.name().equals(name)).reduce((a, b) -> b)
                 .orElseThrow(() -> new RuntimeException("Variable " + name + " not found"));
     }
 
-    public void addFunction(PearFunctionDeclare function) {
-        if (functions.stream().anyMatch(f -> f.name().equals(function.name()))) {
-            throw new RuntimeException("Function " + function.name() + " already exists");
-        }
-        if (variables.stream().anyMatch(v -> v.name().equals(function.name()))) {
-            throw new RuntimeException("Variable " + function.name() + " already exists, cannot create function with same name");
-        }
-
-        functions.add(function);
-    }
-
     public void addVariable(PearVariableState<?> variable) {
-        if (functions.stream().anyMatch(f -> f.name().equals(variable.name()))) {
-            throw new RuntimeException("Function " + variable.name() + " already exists, cannot create variable with same name");
-        }
-        if (variables.stream().anyMatch(v -> v.name().equals(variable.name()))) {
-            throw new RuntimeException("Variable " + variable.name() + " already exists");
-        }
-
         variables.add(variable);
     }
 
     public PearContext copy() {
-        return new PearContext(executor, new ArrayList<>(functions), new ArrayList<>(variables));
+        return new PearContext(executor, new ArrayList<>(variables));
     }
 }

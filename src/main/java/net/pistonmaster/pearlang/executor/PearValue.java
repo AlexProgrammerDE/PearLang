@@ -1,5 +1,7 @@
 package net.pistonmaster.pearlang.executor;
 
+import net.pistonmaster.pearlang.parser.model.instructions.fn.PearFunctionDeclare;
+
 public record PearValue<T>(Class<T> clazz, T value) {
     public PearValue<T> copy() {
         return new PearValue<>(clazz, value);
@@ -21,6 +23,10 @@ public record PearValue<T>(Class<T> clazz, T value) {
         return value instanceof String;
     }
 
+    public boolean isFunction() {
+        return value instanceof PearFunctionDeclare;
+    }
+
     public Number asNumber() {
         return (Number) value;
     }
@@ -31,5 +37,9 @@ public record PearValue<T>(Class<T> clazz, T value) {
 
     public String asString() {
         return (String) value;
+    }
+
+    public PearFunctionDeclare asFunction() {
+        return (PearFunctionDeclare) value;
     }
 }
